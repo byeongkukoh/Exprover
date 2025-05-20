@@ -18,3 +18,21 @@
 ## 🛠️ 세팅 방법
 
 ### 라이브러리 설치
+
+1. Eclipse Paho MQTT C++ Client 설치
+- [공식 사이트](https://eclipse.dev/paho/)
+- `paho-mqttpp3` (C++ wrapper), `paho-mqtt3as` (C 기반 core library) 라이브러리 설치 필요
+
+    1. [vcpkg 설치](https://learn.microsoft.com/ko-kr/vcpkg/get_started/get-started-vs?pivots=shell-powershell)
+        ```bash
+        git clone https://github.com/microsoft/vcpkg.git
+        cd vcpkg
+        ```
+        vcpkg 빌드 진행
+        ```bash
+        .\bootstrap-vcpkg.bat
+        ```
+    2. 명령어를 이용해 `paho-mqttpp3` 설치 (전역으로 경로 세팅 필요)
+        ```bash
+        .\vcpkg install paho-mqttpp3:x64-windows
+        ```
