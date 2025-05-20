@@ -9,8 +9,15 @@ def main():
     proc1.start()
     proc2.start()
 
-    proc1.join()
-    proc2.join()
+    try:
+        proc1.join()
+        proc2.join()
+    except KeyboardInterrupt:
+        print("\n[Main] KeyboardInterrupt 발생, 자식 프로세스 종료 중...")
+        proc1.join()
+        proc1.terminate()
+        proc2.join()
+        proc2.terminate()
 
 if __name__ == "__main__":
     main()

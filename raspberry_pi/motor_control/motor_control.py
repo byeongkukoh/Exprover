@@ -1,4 +1,4 @@
-from time import sleep
+import time
 
 from .Raspi_MotorHAT import Raspi_MotorHAT, Raspi_DCMotor
 from .Raspi_PWM_Servo_Driver import PWM
@@ -60,7 +60,7 @@ command_map = {
 # callback 함수 정의
 def handle_command(topic, message):
     print(f"[MQTT] Received: {message}")
-    action = command_map(message.strip().lower())
+    action = command_map.get(message.strip().lower())
 
     if action:
         action()
@@ -68,9 +68,13 @@ def handle_command(topic, message):
         print(f"[WARN] Unknown command: {message}")
 
 def run_motor_control():
-    mqtt = MQTTClient(client_id = "rpi-motor")
+    mqtt = MQTTClient()
     mqtt.connect()
     mqtt.subscribe("motor", handle_command)
 
-    # 메인 스레드에서 MQTT 수신 유지
-    mqtt.loop_forever()
+    try:
+        while True:
+            time.sleep(1)
+    except KeyboardInterrupt:
+        print("[Main] Ctrl+C 입력됨. MQTT 종료")
+        mqtt.disconnect()

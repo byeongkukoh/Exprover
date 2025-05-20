@@ -43,7 +43,8 @@ class MQTTClient:
             result = self.client.publish(topic, message)
 
             if result[0] == 0:
-                print(f"[MQTT] Published to {topic}")
+                pass
+                # print(f"[MQTT] Published to {topic}")
             else:
                 print(f"[MQTT] Failed to publish to {topic} (status: {result[0]})")
 
@@ -58,8 +59,16 @@ class MQTTClient:
             print(f"[MQTT] Unknown topic key: {topic_key}")
             return
         
+        self.client.subscribe(topic)
+        print(f"[MQTT] Subscribe {topic}")
+
         def on_message(client, userdata, msg):
-            callback(msg.topic, msg.payload.decode())
+            try:
+                print(f"[MQTT] Received: {msg}")
+
+                callback("", msg.payload.decode())
+            except:
+                print("f[MQTT] Error")
         
         self.client.on_message = on_message
         self.client.subscribe(topic)

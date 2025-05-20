@@ -9,7 +9,7 @@ from mqtt.mqtt_client import MQTTClient
 
 def run_camera_streaming():
     # MQTT 클라이언트 연결
-    mqtt = MQTTClient(client_id = "rpi-camera")
+    mqtt = MQTTClient()
     mqtt.connect()
 
 
@@ -31,7 +31,7 @@ def run_camera_streaming():
             jpg_base64 = base64.b64encode(buffer).decode('utf-8')
 
             mqtt.publish("video", jpg_base64)
-            time.sleep(0.03)    # 30ms (약 33fps)
+            time.sleep(0.1)    # 100ms (약 10fps)
 
     except KeyboardInterrupt:
         print("종료 중...")
