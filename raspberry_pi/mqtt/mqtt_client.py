@@ -2,7 +2,7 @@ import time
 import paho.mqtt.client as mqtt
 
 # 설정: 브로커와 포트
-MQTT_BROKER_IP = "BROKER IP를 입력하세요."
+MQTT_BROKER_IP = "54.180.119.169"
 MQTT_PORT = 1883    # 기본 포트: 1883
 
 # 토픽 정의
@@ -15,19 +15,21 @@ TOPICS = {
 # MQTT Client Class 정의
 class MQTTClient:
     # MQTT 객체 초기화
-    def __init__(self, client_id=""):
-        self.client = mqtt.Client(client_id)
+    def __init__(self, client_id="", broker_ip=MQTT_BROKER_IP, port=1883):
+        self.broker_ip = broker_ip
+        self.port = port
+        self.client = mqtt.Client(client_id = client_id)
 
     # MQTT 연결 시도
     def connect(self):
         while True:
             try:
-                self.client.connect(MQTT_BROKER_IP, MQTT_PORT, 60)  # Broker 연결
-                print(f"[MQTT] Connected to {MQTT_BROKER_IP}: {MQTT_PORT}")
+                self.client.connect(self.broker_ip, self.port, 60)  # Broker 연결
+                print(f"[MQTT] Connected to {self.broker_ip}: {self.port}")
                 break
             except Exception as err:
                 print(f"[MQTT] Connection failed: {err}")
-                time.sleep(5)   # MQTT 재연결 시도
+                time.sleep(5)   # 5초 후 MQTT 재연결 시도
 
     # MQTT 발행 (Publish)
     def publish(self, topic_key, message):
@@ -67,6 +69,6 @@ class MQTTClient:
     def disconnect(self):
         self.client.disconnect()
 
-    # 루프 중지
+    # 루프 중단 방지
     def loop_forever(self):
         self.client.loop_forever()

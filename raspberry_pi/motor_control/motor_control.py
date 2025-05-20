@@ -1,12 +1,12 @@
-import paho.mqtt.client as mqtt
-import subprocess
-
-from Raspi_MotorHAT import Raspi_MotorHAT, Raspi_DCMotor
-from Raspi_PWM_Servo_Driver import PWM
 from time import sleep
 
-motorHat = Raspi_MotorHAT(addr=0x6f) 
+from .Raspi_MotorHAT import Raspi_MotorHAT, Raspi_DCMotor
+from .Raspi_PWM_Servo_Driver import PWM
 
+from mqtt.mqtt_client import MQTTClient
+
+# Motor 초기 설정
+motorHat = Raspi_MotorHAT(addr=0x6f) 
 dcMotor = motorHat.getMotor(2) #핀번호
 svMotor = PWM(address = 0x6F)
 
@@ -47,38 +47,30 @@ def ACC():
     dcMotor.setSpeed(dcMotorSpeed)
     
 
-# MQTT 콜백 함수 정의
-def on_connect(client, userdata, flags, rc):
-    print("Connected with result code " + str(rc))
-    client.subscribe("rpi/command")
+# 명령어 모음
+command_map = {
+    "go": GO,
+    "back": BACK,
+    "left": LEFT,
+    "right": RIGHT,
+    "stop": STOP,
+    "acc": ACC,
+}
 
+# callback 함수 정의
+def handle_command(topic, message):
+    print(f"[MQTT] Received: {message}")
+    action = command_map(message.strip().lower())
 
-def on_message(client, userdata, msg):
-    command = msg.payload.decode()
-    print(f"Received command: {command}")
-    
-    try:
-        if (command == "go"):
-            GO()
-        elif (command == "back"):
-            BACK()
-        elif (command == "right"):
-            RIGHT()
-        elif (command == "left"):
-            LEFT()
-        elif (command == "stop"):
-            STOP()
-        elif (command == "acc"):
-            ACC()
-        else:
-            print("Wrong Command. (go, back, left, right, stop)")
+    if action:
+        action()
+    else:
+        print(f"[WARN] Unknown command: {message}")
 
-    except subprocess.CalledProcessError as e:
-        print(f"Command failed:\n{e.stderr}")
+def run_motor_control():
+    mqtt = MQTTClient(client_id = "rpi-motor")
+    mqtt.connect()
+    mqtt.subscribe("motor", handle_command)
 
-client = mqtt.Client()
-client.on_connect = on_connect
-client.on_message = on_message
-client.connect("54.180.119.169", 1883, 60)
-client.loop_forever()
-
+    # 메인 스레드에서 MQTT 수신 유지
+    mqtt.loop_forever()
