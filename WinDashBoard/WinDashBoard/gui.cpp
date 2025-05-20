@@ -3,7 +3,8 @@
 #include <string>
 #include <vector>
 
-HWND hLogBox;
+HWND hListBox;
+HFONT hFont;	// 전역 폰트 핸들 선언
 
 PROCESS_INFORMATION g_pyProcess = {};
 bool g_isRunning = false;
@@ -33,15 +34,11 @@ int InitGUI(HINSTANCE hInstance, int nCmdShow) {
 	);
 
 	// 로그 창 생성
-	hLogBox = CreateWindow(
-		L"EDIT",
-		L"",
-		WS_VISIBLE | WS_CHILD | ES_MULTILINE | ES_READONLY | WS_VSCROLL,
+	hListBox = CreateWindow(
+		L"LISTBOX", nullptr,
+		WS_VISIBLE | WS_CHILD | WS_VSCROLL | LBS_NOTIFY,
 		25, 25, 550, 200,
-		hwnd,
-		nullptr,
-		hInstance,
-		nullptr
+		hwnd, (HMENU)3000, hInstance, nullptr
 	);
 
 	HWND hToggleBtn = CreateWindow(
@@ -109,8 +106,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 			break;
 		}
 		break;
-		//HandleButtonCommand(hwnd, wParam);
-		//break;
 	case WM_KEYDOWN:
 		HandleKeyDown(hwnd, wParam);
 		break;

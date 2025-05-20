@@ -2,7 +2,7 @@
 #include "mqtt.h"
 #include "Resource.h"
 
-extern HWND hLogBox;
+extern HWND hListBox;
 
 void CreateButtonControls(HWND hwnd, HINSTANCE hInstance) {
 	// 가상 키보드(버튼) 생성 (방향키 + 스페이스바)
@@ -48,37 +48,30 @@ void CreateButtonControls(HWND hwnd, HINSTANCE hInstance) {
 
 void HandleButtonCommand(HWND hwnd, WPARAM wParam) {
 	wchar_t buffer[1024] = L"";
-	GetWindowText(hLogBox, buffer, 1024);
+	GetWindowText(hListBox, buffer, 1024);
 
 	switch (LOWORD(wParam)) {
-	case ID_UP: {
-		wcscat_s(buffer, L"\r\n[INFO] ↑ 버튼이 눌렸습니다.");
+	case ID_UP:
+		AddLogMsg(L"[INFO] ↑ 버튼이 눌렸습니다.");
 		PublishMQTT("go");
 		break;
-	}
-	case ID_DOWN: {
-		wcscat_s(buffer, L"\r\n[INFO] ↓ 버튼이 눌렸습니다.");
+	case ID_DOWN:
+		AddLogMsg(L"[INFO] ↓ 버튼이 눌렸습니다.");
 		PublishMQTT("back");
 		break;
-	}
-	case ID_LEFT: {
-		wcscat_s(buffer, L"\r\n[INFO] ← 버튼이 눌렸습니다.");
+	case ID_LEFT:
+		AddLogMsg(L"[INFO] ← 버튼이 눌렸습니다.");
 		PublishMQTT("left");
 		break;
-	}
-	case ID_RIGHT: {
-		wcscat_s(buffer, L"\r\n[INFO] → 버튼이 눌렸습니다.");
+	case ID_RIGHT:
+		AddLogMsg(L"[INFO] → 버튼이 눌렸습니다.");
 		PublishMQTT("right");
 		break;
-	}
-	case ID_SPACE: {
-		wcscat_s(buffer, L"\r\n[INFO] SPACE 버튼이 눌렸습니다.");
+	case ID_SPACE:
+		AddLogMsg(L"[INFO] SPACE 버튼이 눌렸습니다.");
 		PublishMQTT("stop");
 		break;
 	}
-	}
-
-	SetWindowText(hLogBox, buffer);
 }
 
 void HandleKeyDown(HWND hwnd, WPARAM wParam) {
@@ -99,4 +92,12 @@ void HandleKeyDown(HWND hwnd, WPARAM wParam) {
 		HandleButtonCommand(hwnd, ID_SPACE);
 		break;
 	}
+}
+
+void AddLogMsg(const wchar_t* message) {
+	SendMessage(hListBox, LB_ADDSTRING, 0, (LPARAM)message);
+
+	// 마지막 줄로 이동
+	int count = (int)SendMessage(hListBox, LB_GETCOUNT, 0, 0);
+	SendMessage(hListBox, LB_SETTOPINDEX, count - 1, 0);
 }
