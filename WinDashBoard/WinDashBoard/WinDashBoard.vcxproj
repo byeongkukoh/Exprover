@@ -127,20 +127,25 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="framework.h" />
-    <ClInclude Include="Resource.h" />
-    <ClInclude Include="targetver.h" />
-    <ClInclude Include="WinDashBoard.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="WinDashBoard.cpp" />
-  </ItemGroup>
-  <ItemGroup>
     <ResourceCompile Include="WinDashBoard.rc" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="small.ico" />
     <Image Include="WinDashBoard.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="command.h" />
+    <ClInclude Include="framework.h" />
+    <ClInclude Include="gui.h" />
+    <ClInclude Include="mqtt.h" />
+    <ClInclude Include="Resource.h" />
+    <ClInclude Include="WinDashBoard.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="command.cpp" />
+    <ClCompile Include="gui.cpp" />
+    <ClCompile Include="mqtt.cpp" />
+    <ClCompile Include="WinDashBoard.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
