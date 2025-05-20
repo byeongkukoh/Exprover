@@ -1,4 +1,34 @@
 # files
 
 # directory
-.git
+.git/
+
+# Visual Studio
+.vs/
+Debug/
+Release/
+x64/
+ipch/
+
+*.suo
+*.user
+*.VC.db
+*.opendb
+*.log
+*.tlog
+*.obj
+*.pch
+*.pdb
+
+# CMake 사용 시
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+
+# Python 관련
+__pycache__/
+*.pyc
+
+# 기타
+*.DS_Store
