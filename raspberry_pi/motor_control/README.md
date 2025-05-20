@@ -15,13 +15,13 @@
 ### 라이브러리 설치
 
 1. `Raspi-MotorHat` 설치
-- 모터햇 제조사(UGEEK)에서 제공하는 라이브러리 설치 ([홈페이지](https://wiki.geekworm.com/Robot_Expansion_Board), [GitHub](https://github.com/Alictronix/Raspi-MotorHat))
+- UGEEK MotorHat 라이브러리 설치 ([GitHub](https://github.com/casmer/ugeek-stepper-motor-hat/))
     ```bash
-    git clone https://github.com/Alictronix/Raspi-MotorHat.git
+    git clone https://github.com/casmer/ugeek-stepper-motor-hat.git
     ```
 - 클론한 디렉토리로 이동 후, 아래 3개 파일을 작업 디렉토리로 복사
     - `Raspi_MotorHat.py`, `Raspi_PWM_Servo_Driver.py`, `Raspi_I2C.py`
     ```bash
-    cd Raspi-MotorHat
+    cd ugeek-stepper-motor-hat
     cp Raspi_*.py ~/project_dir
     ```
