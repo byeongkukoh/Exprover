@@ -27,3 +27,9 @@ void PublishMQTT(const char* message) {
 		std::cerr << "[MQTT ERROR] " << exc.what() << std::endl;
 	}
 }
+
+void AsyncPublish(const char* message) {
+	std::thread([message]() {
+		PublishMQTT(message);
+		}).detach();
+}

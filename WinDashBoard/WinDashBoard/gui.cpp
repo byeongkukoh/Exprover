@@ -9,6 +9,9 @@
 HWND hListBox;
 HFONT hFont;	// 전역 폰트 핸들 선언
 
+HWND hPictureBox;					// 영상 출력용 PictureBox
+HBITMAP hCurrentBitmap = nullptr;	// 현재 표시 중인 비트맵
+
 PROCESS_INFORMATION g_pyProcess = {};
 bool g_isRunning = false;
 
@@ -58,6 +61,13 @@ int InitGUI(HINSTANCE hInstance, int nCmdShow) {
 	// 버튼 생성
 	CreateButtonControls(hwnd, hInstance);
 
+	hPictureBox = CreateWindow(
+		L"STATIC", nullptr,
+		WS_VISIBLE | WS_CHILD | SS_BITMAP,
+		25, 240, 320, 240,  // 좌표 및 크기 조절 가능
+		hwnd, nullptr, hInstance, nullptr
+	);
+
 	StartVideoReceiver();
 
 	// 5. 창 표시
@@ -76,41 +86,6 @@ int InitGUI(HINSTANCE hInstance, int nCmdShow) {
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 	switch (msg) {
-	case WM_COMMAND:
-		switch (LOWORD(wParam)) {
-		case 2001:  // 카메라 ON/OFF 토글
-			if (!g_isRunning) {
-				// Python 실행
-				STARTUPINFO si = { sizeof(STARTUPINFO) };
-				PROCESS_INFORMATION pi = {};
-				std::wstring cmd = L"python C:\\Users\\luna\\Downloads\\main\\connect.py";
-				std::vector<wchar_t> cmdBuffer(cmd.begin(), cmd.end());
-				cmdBuffer.push_back(0);
-
-				if (CreateProcessW(nullptr, cmdBuffer.data(), nullptr, nullptr, FALSE, CREATE_NO_WINDOW, nullptr, nullptr, &si, &pi)) {
-					g_pyProcess = pi;
-					g_isRunning = true;
-					SetWindowText(GetDlgItem(hwnd, 2001), L"카메라 OFF");  // 텍스트 변경
-				}
-				else {
-					MessageBox(hwnd, L"Python 실행 실패!", L"에러", MB_ICONERROR);
-				}
-			}
-			else {
-				// Python 종료
-				TerminateProcess(g_pyProcess.hProcess, 0);
-				CloseHandle(g_pyProcess.hProcess);
-				CloseHandle(g_pyProcess.hThread);
-				g_isRunning = false;
-				SetWindowText(GetDlgItem(hwnd, 2001), L"카메라 ON");  // 텍스트 변경
-			}
-			break;
-
-		default:
-			HandleButtonCommand(hwnd, wParam);  // 기존 다른 버튼 처리
-			break;
-		}
-		break;
 	case WM_KEYDOWN:
 		HandleKeyDown(hwnd, wParam);
 		break;
@@ -120,6 +95,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 			CloseHandle(g_pyProcess.hProcess);
 			CloseHandle(g_pyProcess.hThread);
 		}
+
+		if (hCurrentBitmap) {
+			DeleteObject(hCurrentBitmap);
+			hCurrentBitmap = nullptr;
+		}
+
 		PostQuitMessage(0);		// 메시지 루프 종료 요청
 
 		return 0;

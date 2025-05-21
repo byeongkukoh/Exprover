@@ -1,10 +1,14 @@
 #include <iostream>
 #include <thread>
+#include <windows.h>
 #include <opencv2/opencv.hpp>
 
 #include "base64.h"
 #include "mqtt/async_client.h"
 #include "mqtt_video_receiver.h"
+
+extern HWND hPictureBox;
+extern HBITMAP hCurrentBitmap;
 
 namespace mqtt {
 	const std::string message::EMPTY_STR;
@@ -24,6 +28,18 @@ void OnVideoMessage(const std::string& base64) {
 	if (image.empty()) {
 		std::cerr << "[ERROR] 디코딩 실패 (빈 이미지)" << std::endl;
 		return;
+	}
+
+	HBITMAP hNewBitmap = MatToHBITMAP(image);
+	if (hNewBitmap) {
+		// 이전 비트맵 제거
+		if (hCurrentBitmap) {
+			DeleteObject(hCurrentBitmap);
+		}
+		hCurrentBitmap = hNewBitmap;
+
+		// GUI에 표시
+		SendMessage(hPictureBox, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hNewBitmap);
 	}
 
 	std::cout << "[MQTT] 이미지 디코딩 성공: " << image.cols << "x" << image.rows << std::endl;
@@ -61,4 +77,34 @@ void StartVideoReceiver() {
 			std::cerr << "[MQTT ERROR] " << err.what() << std::endl;
 		}
 	}).detach();
+}
+
+HBITMAP MatToHBITMAP(const cv::Mat& mat) {
+	if (mat.empty()) return nullptr;
+
+	cv::Mat bgr;
+	if (mat.channels() == 1)
+		cv::cvtColor(mat, bgr, cv::COLOR_GRAY2BGR);
+	else if (mat.channels() == 3)
+		bgr = mat;
+	else
+		return nullptr;
+
+	BITMAPINFO bmi = {};
+	bmi.bmiHeader.biSize = sizeof(bmi.bmiHeader);
+	bmi.bmiHeader.biWidth = bgr.cols;
+	bmi.bmiHeader.biHeight = -bgr.rows;  // top-down
+	bmi.bmiHeader.biPlanes = 1;
+	bmi.bmiHeader.biBitCount = 24;
+	bmi.bmiHeader.biCompression = BI_RGB;
+
+	void* bits = nullptr;
+	HDC hdc = GetDC(nullptr);
+	HBITMAP hBitmap = CreateDIBSection(hdc, &bmi, DIB_RGB_COLORS, &bits, nullptr, 0);
+	ReleaseDC(nullptr, hdc);
+
+	if (bits) {
+		memcpy(bits, bgr.data, bgr.cols * bgr.rows * 3);
+	}
+	return hBitmap;
 }

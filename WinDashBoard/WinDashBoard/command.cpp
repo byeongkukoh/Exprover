@@ -53,23 +53,23 @@ void HandleButtonCommand(HWND hwnd, WPARAM wParam) {
 	switch (LOWORD(wParam)) {
 	case ID_UP:
 		AddLogMsg(L"[INFO] ↑ 버튼이 눌렸습니다.");
-		PublishMQTT("go");
+		AsyncPublish("go");
 		break;
 	case ID_DOWN:
 		AddLogMsg(L"[INFO] ↓ 버튼이 눌렸습니다.");
-		PublishMQTT("back");
+		AsyncPublish("back");
 		break;
 	case ID_LEFT:
 		AddLogMsg(L"[INFO] ← 버튼이 눌렸습니다.");
-		PublishMQTT("left");
+		AsyncPublish("left");
 		break;
 	case ID_RIGHT:
 		AddLogMsg(L"[INFO] → 버튼이 눌렸습니다.");
-		PublishMQTT("right");
+		AsyncPublish("right");
 		break;
 	case ID_SPACE:
 		AddLogMsg(L"[INFO] SPACE 버튼이 눌렸습니다.");
-		PublishMQTT("stop");
+		AsyncPublish("stop");
 		break;
 	}
 }
