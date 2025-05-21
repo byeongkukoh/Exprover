@@ -35,37 +35,27 @@ int InitGUI(HINSTANCE hInstance, int nCmdShow) {
 		CLASS_NAME,									// 앞에서 등록한 클래스 이름
 		L"MQTT DASHBOARD",							// 창 제목
 		WS_OVERLAPPEDWINDOW,						// 기본 윈도우 스타일
-		CW_USEDEFAULT, CW_USEDEFAULT, 900, 500,		// 위치(x, y), 크기 (width, height)
+		CW_USEDEFAULT, CW_USEDEFAULT, 1080, 570,		// 위치(x, y), 크기 (width, height)
 		nullptr, nullptr, hInstance, nullptr		// 부모, 메뉴 없음
 	);
 
-	// 로그 창 생성
-	hListBox = CreateWindow(
-		L"LISTBOX", nullptr,
-		WS_VISIBLE | WS_CHILD | WS_VSCROLL | LBS_NOTIFY,
-		25, 25, 550, 200,
-		hwnd, (HMENU)3000, hInstance, nullptr
-	);
-
-	HWND hToggleBtn = CreateWindow(
-		L"BUTTON",
-		L"카메라 ON",  // 초기 버튼 텍스트
-		WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
-		600, 70, 200, 40,
-		hwnd,
-		(HMENU)2001,   // 버튼 ID
-		hInstance,
-		nullptr
+	// 영상 창 생성
+	hPictureBox = CreateWindow(
+		L"STATIC", nullptr,
+		WS_VISIBLE | WS_CHILD | SS_BITMAP,
+		25, 25, 500, 375,  // 좌표 및 크기 조절 가능
+		hwnd, nullptr, hInstance, nullptr
 	);
 
 	// 버튼 생성
 	CreateButtonControls(hwnd, hInstance);
 
-	hPictureBox = CreateWindow(
-		L"STATIC", nullptr,
-		WS_VISIBLE | WS_CHILD | SS_BITMAP,
-		25, 240, 320, 240,  // 좌표 및 크기 조절 가능
-		hwnd, nullptr, hInstance, nullptr
+	// 로그 창 생성
+	hListBox = CreateWindow(
+		L"LISTBOX", nullptr,
+		WS_VISIBLE | WS_CHILD | WS_VSCROLL | LBS_NOTIFY,
+		555, 25, 500, 520,
+		hwnd, (HMENU)3000, hInstance, nullptr
 	);
 
 	StartVideoReceiver();

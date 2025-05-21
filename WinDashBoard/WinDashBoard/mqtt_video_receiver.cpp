@@ -30,7 +30,14 @@ void OnVideoMessage(const std::string& base64) {
 		return;
 	}
 
-	HBITMAP hNewBitmap = MatToHBITMAP(image);
+	// 180도 회전 (카메라가 거꾸로 달린 경우)
+	cv::rotate(image, image, cv::ROTATE_180);
+
+	// 320x240 → 500x375 (4:3 비율 유지)
+	cv::Mat resized;
+	cv::resize(image, resized, cv::Size(500, 375), 0, 0, cv::INTER_LINEAR);
+
+	HBITMAP hNewBitmap = MatToHBITMAP(resized);
 	if (hNewBitmap) {
 		// 이전 비트맵 제거
 		if (hCurrentBitmap) {

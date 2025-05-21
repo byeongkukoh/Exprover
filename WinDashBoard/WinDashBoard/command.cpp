@@ -10,7 +10,7 @@ void CreateButtonControls(HWND hwnd, HINSTANCE hInstance) {
 		L"BUTTON",					// 클래스 이름 (BUTTON: 윈도우 시스템 내장 버튼 컨트롤)
 		L"↑",						// 버튼 라벨
 		WS_VISIBLE | WS_CHILD,		// 보이게 + 자식 컨트롤로 표시
-		85, 250, 50, 50,			// 위치(x, y), 크기 (width, height)
+		85, 410, 50, 50,			// 위치(x, y), 크기 (width, height)
 		hwnd,						// 부모 윈도우 핸들
 		(HMENU)ID_UP,				// 인스턴스 핸들
 		hInstance,					// 인스턴스 핸들
@@ -20,28 +20,35 @@ void CreateButtonControls(HWND hwnd, HINSTANCE hInstance) {
 	CreateWindow(
 		L"BUTTON", L"←",
 		WS_VISIBLE | WS_CHILD,
-		25, 310, 50, 50,
+		25, 470, 50, 50,
 		hwnd, (HMENU)ID_LEFT, hInstance, nullptr
 	);
 
 	CreateWindow(
 		L"BUTTON", L"↓",
 		WS_VISIBLE | WS_CHILD,
-		85, 310, 50, 50,
+		85, 470, 50, 50,
 		hwnd, (HMENU)ID_DOWN, hInstance, nullptr
 	);
 
 	CreateWindow(
 		L"BUTTON", L"→",
 		WS_VISIBLE | WS_CHILD,
-		145, 310, 50, 50,
+		145, 470, 50, 50,
 		hwnd, (HMENU)ID_RIGHT, hInstance, nullptr
 	);
 
 	CreateWindow(
 		L"BUTTON", L"Space",
 		WS_VISIBLE | WS_CHILD,
-		205, 310, 200, 50,
+		205, 470, 200, 50,
+		hwnd, (HMENU)ID_SPACE, hInstance, nullptr
+	);
+
+	CreateWindow(
+		L"BUTTON", L"Ctrl",
+		WS_VISIBLE | WS_CHILD,
+		415, 470, 110, 50,
 		hwnd, (HMENU)ID_SPACE, hInstance, nullptr
 	);
 }
