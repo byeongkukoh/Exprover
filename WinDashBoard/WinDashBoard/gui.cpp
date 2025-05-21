@@ -1,7 +1,10 @@
-#include "gui.h"
-#include "command.h"
 #include <string>
 #include <vector>
+
+#include "gui.h"
+#include "command.h"
+#include "mqtt_video_receiver.h"
+
 
 HWND hListBox;
 HFONT hFont;	// 전역 폰트 핸들 선언
@@ -54,6 +57,8 @@ int InitGUI(HINSTANCE hInstance, int nCmdShow) {
 
 	// 버튼 생성
 	CreateButtonControls(hwnd, hInstance);
+
+	StartVideoReceiver();
 
 	// 5. 창 표시
 	ShowWindow(hwnd, nCmdShow);

@@ -1,4 +1,5 @@
 # files
+*.pem
 
 # directory
 .git/
