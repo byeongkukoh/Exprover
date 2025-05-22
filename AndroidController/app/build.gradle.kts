@@ -58,5 +58,7 @@ dependencies {
     implementation("androidx.compose.ui:ui:1.6.8")
     implementation("androidx.compose.material:material:1.6.8")
     implementation("androidx.compose.ui:ui-tooling-preview:1.6.8")
+    implementation("androidx.compose.runtime:runtime:1.6.8")
+    implementation("androidx.compose.foundation:foundation:1.6.8")
     implementation("org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.2.5")
 }

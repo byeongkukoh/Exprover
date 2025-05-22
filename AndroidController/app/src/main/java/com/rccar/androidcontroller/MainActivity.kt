@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material.Button
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -16,6 +17,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.runtime.remember
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 
 class MainActivity : ComponentActivity() {
     private lateinit var mqttManager: MqttManager
@@ -23,16 +27,16 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        try {
-            mqttManager = MqttManager()
-            mqttManager.connect() // Context 제거
-            Log.d("MainActivity", "MQTT 연결 시도")
-        } catch (e: Exception) {
-            Log.e("MainActivity", "MQTT 연결 실패: ${e.message}", e)
-        }
-
         setContent {
-            MainScreen(mqttManager)
+            val logs = remember { mutableStateListOf<String>() }
+
+            // 콜백으로 로그 전달
+            mqttManager = MqttManager { msg ->
+                logs.add(msg)
+            }
+            mqttManager.connect()
+
+            MainScreen(mqttManager, logs)
         }
     }
 
@@ -49,7 +53,7 @@ class MainActivity : ComponentActivity() {
 
 // 메인 화면 구성
 @Composable
-fun MainScreen(mqttManager: MqttManager) {
+fun MainScreen(mqttManager: MqttManager, logs: List<String>) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -68,15 +72,7 @@ fun MainScreen(mqttManager: MqttManager) {
             Text("영상 출력 영역", color = Color.White)
         }
         Spacer(modifier = Modifier.height(32.dp))
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .aspectRatio(4f / 2f)
-                .background(Color.Black),
-            contentAlignment = Alignment.Center
-        ) {
-            Text("로그 출력 영역", color = Color.White)
-        }
+        LogBox(logs)
         Spacer(modifier = Modifier.height(32.dp))
         ControlPanel(mqttManager)
     }
@@ -172,5 +168,22 @@ fun DirectionButton(label: String, mqttManager: MqttManager) {
             fontWeight = FontWeight.W900,
             textAlign = TextAlign.Center
         )
+    }
+}
+
+@Composable
+fun LogBox(logs: List<String>, modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .aspectRatio(4f / 2f)
+            .background(Color.Black)
+            .padding(8.dp)
+    ) {
+        LazyColumn {
+            items(logs.reversed()) { log ->
+                Text(log, color = Color.White, fontSize = 12.sp)
+            }
+        }
     }
 }

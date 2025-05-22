@@ -1,26 +1,37 @@
 package com.rccar.androidcontroller
 
-import android.content.Context
 import org.eclipse.paho.client.mqttv3.*
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence
 
-class MqttManager {
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+
+fun currentTimeString(): String {
+    val sdf = SimpleDateFormat("MM-dd HH:mm:ss", Locale.getDefault())
+    return sdf.format(Date())
+}
+
+class MqttManager(val onLog: (String) -> Unit) {
     private lateinit var client: MqttClient
-    private val serverIp = "tcp://54.180.119.169" // 포트 명시 (기본 MQTT 포트: 1883)
+    private val serverIP = "tcp://54.180.119.169" // 포트 명시 (기본 MQTT 포트: 1883)
     private val clientId = "ANDROIDCONTROLLER"
     private val topic = "rpi/motor"
 
     fun connect() {
         try {
             // MemoryPersistence를 사용하여 클라이언트 상태를 메모리에 저장
-            client = MqttClient(serverIp, clientId, MemoryPersistence())
+            client = MqttClient(serverIP, clientId, MemoryPersistence())
             val options = MqttConnectOptions()
             options.isCleanSession = true
 
             client.connect(options)
-            println("[MQTT] 연결 성공")
+
+            val logMsg = "[${currentTimeString()}] 연결 성공 (IP: ${serverIP}, TOPIC: ${topic})"
+            onLog(logMsg)
         } catch (e: Exception) {
-            println("[MQTT] 연결 실패: ${e.message}")
+            val logMsg = "[${currentTimeString()}] 연결 실패 (${e.message})"
+            onLog(logMsg)
             e.printStackTrace()
         }
     }
@@ -30,13 +41,16 @@ class MqttManager {
             try {
                 val mqttMessage = MqttMessage(message.toByteArray())
                 client.publish(topic, mqttMessage)
-                println("[MQTT] 메시지 발행: $message")
+                val logMsg = "[${currentTimeString()}] 메시지 발행: $message"
+                onLog(logMsg)
             } catch (e: Exception) {
-                println("[MQTT] 발행 실패: ${e.message}")
+                val logMsg = "[${currentTimeString()}] 메시지 발행 실패: ${e.message}"
+                onLog(logMsg)
                 e.printStackTrace()
             }
         } else {
-            println("[MQTT] 연결되지 않음. 발행 실패")
+            val logMsg = "[${currentTimeString()}] 연결되지 않음. 발행 실패"
+            onLog(logMsg)
         }
     }
 
@@ -45,9 +59,11 @@ class MqttManager {
         if (::client.isInitialized && client.isConnected) {
             try {
                 client.disconnect()
-                println("[MQTT] 연결 해제 성공")
+                val logMsg = "[${currentTimeString()}] 연결 해제 성공"
+                onLog(logMsg)
             } catch (e: Exception) {
-                println("[MQTT] 연결 해제 실패: ${e.message}")
+                val logMsg = "[${currentTimeString()}] 연결 해제 실패: ${e.message}"
+                onLog(logMsg)
                 e.printStackTrace()
             }
         }
