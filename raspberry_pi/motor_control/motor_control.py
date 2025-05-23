@@ -67,8 +67,8 @@ def handle_command(topic, message):
     else:
         print(f"[WARN] Unknown command: {message}")
 
-def run_motor_control():
-    mqtt = MQTTClient()
+def run_motor_control(name):
+    mqtt = MQTTClient(name)
     mqtt.connect()
     mqtt.subscribe("motor", handle_command)
 

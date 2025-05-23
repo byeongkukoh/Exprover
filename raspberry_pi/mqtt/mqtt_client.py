@@ -6,19 +6,20 @@ MQTT_BROKER_IP = "54.180.119.169"
 MQTT_PORT = 1883    # 기본 포트: 1883
 
 # 토픽 정의
-TOPICS = {
-    "video": "rpi/video",
-    "motor": "rpi/motor",
-}
+TOPICS = ["video", "motor"]
 
 
 # MQTT Client Class 정의
 class MQTTClient:
     # MQTT 객체 초기화
-    def __init__(self, client_id="", broker_ip=MQTT_BROKER_IP, port=1883):
+    def __init__(self, name, client_id="", broker_ip=MQTT_BROKER_IP, port=1883):
         self.broker_ip = broker_ip
         self.port = port
+        self.name = name
         self.client = mqtt.Client(client_id = client_id)
+
+    def _get_topic(self, key):
+        return f"{self.name}/{key}"
 
     # MQTT 연결 시도
     def connect(self):
@@ -33,18 +34,18 @@ class MQTTClient:
 
     # MQTT 발행 (Publish)
     def publish(self, topic_key, message):
-        topic = TOPICS.get(topic_key)
-
-        if topic is None:
+        if topic_key not in TOPICS:
             print(f"[MQTT] Unknown topic key: {topic_key}")
             return
+        
+        topic = self._get_topic(topic_key)
+
 
         try:
             result = self.client.publish(topic, message)
 
             if result[0] == 0:
                 pass
-                # print(f"[MQTT] Published to {topic}")
             else:
                 print(f"[MQTT] Failed to publish to {topic} (status: {result[0]})")
 
@@ -54,10 +55,11 @@ class MQTTClient:
 
     # MQTT 구독 (Subscribe)
     def subscribe(self, topic_key, callback):
-        topic =  TOPICS.get(topic_key)
-        if topic is None:
+        if topic_key not in TOPICS:
             print(f"[MQTT] Unknown topic key: {topic_key}")
             return
+        
+        topic = self._get_topic(topic_key)
         
         self.client.subscribe(topic)
         print(f"[MQTT] Subscribe {topic}")

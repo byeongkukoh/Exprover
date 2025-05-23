@@ -3,8 +3,9 @@ from camera_streaming.video_live_streaming import run_camera_streaming
 from motor_control.motor_control import run_motor_control
 
 def main():
-    proc1 = multiprocessing.Process(target = run_camera_streaming)
-    proc2 = multiprocessing.Process(target = run_motor_control)
+    name = input("차량 이름을 입력하세요: ").strip()
+    proc1 = multiprocessing.Process(target = run_camera_streaming, args=(name,))
+    proc2 = multiprocessing.Process(target = run_motor_control, args=(name,))
 
     proc1.start()
     proc2.start()

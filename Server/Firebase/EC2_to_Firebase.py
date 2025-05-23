@@ -21,7 +21,7 @@ def parse_sensor_value(value):
 # MQTT 연결 콜백
 def on_connect(client, userdata, flags, rc):
     print("MQTT 연결됨. 코드:", rc)
-    topics = ["car1/data", "car2/data"]
+    topics = ["exp/data", "rover/data"]
     for topic in topics:
         client.subscribe(topic)
         print("구독 시작:", topic)
@@ -55,10 +55,10 @@ def on_message(client, userdata, msg):
             "time": now,
         }
 
-        if topic == "car1/data":
-            db.collection("First_Car").document(doc_id).set(data)
-        elif topic == "car2/data":
-            db.collection("Second_Car").document(doc_id).set(data)
+        if topic == "exp/data":
+            db.collection("EXP").document(doc_id).set(data)
+        elif topic == "rover/data":
+            db.collection("ROVER").document(doc_id).set(data)
         else:
             print("알 수 없는 토픽:", topic)
 

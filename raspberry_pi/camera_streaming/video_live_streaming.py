@@ -7,9 +7,9 @@ from picamera2 import Picamera2     # PiCamera2 제어 라이브러리
 
 from mqtt.mqtt_client import MQTTClient
 
-def run_camera_streaming():
+def run_camera_streaming(name):
     # MQTT 클라이언트 연결
-    mqtt = MQTTClient()
+    mqtt = MQTTClient(name)
     mqtt.connect()
 
 
