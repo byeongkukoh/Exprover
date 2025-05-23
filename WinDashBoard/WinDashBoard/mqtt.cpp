@@ -6,6 +6,7 @@
 
 #include "mqtt/async_client.h"
 #include "mqtt.h"
+#include "command.h"
 
 const std::string SERVER_ADDRESS = "tcp://54.180.119.169";
 const std::string CLIENT_ID = "WinClient";
@@ -24,6 +25,10 @@ void PublishMQTT(const char* message) {
 		client.publish(pubmsg)->wait();
 	}
 	catch (const mqtt::exception& exc) {
+		std::string errorMsg = std::string("MQTT | ERROR | ") + exc.what();
+		std::wstring wMsg = ConvertToWString(errorMsg);
+
+		AddLogMsg(wMsg.c_str());
 		std::cerr << "[MQTT ERROR] " << exc.what() << std::endl;
 	}
 }
@@ -31,5 +36,5 @@ void PublishMQTT(const char* message) {
 void AsyncPublish(const char* message) {
 	std::thread([message]() {
 		PublishMQTT(message);
-		}).detach();
+	}).detach();
 }

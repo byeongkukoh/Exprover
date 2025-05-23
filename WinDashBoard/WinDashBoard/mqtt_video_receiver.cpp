@@ -2,8 +2,10 @@
 #include <thread>
 #include <windows.h>
 #include <opencv2/opencv.hpp>
+#include <string>
 
 #include "base64.h"
+#include "command.h"
 #include "mqtt/async_client.h"
 #include "mqtt_video_receiver.h"
 
@@ -26,7 +28,8 @@ void OnVideoMessage(const std::string& base64) {
 	cv::Mat image = cv::imdecode(jpg_bytes, cv::IMREAD_COLOR);
 
 	if (image.empty()) {
-		std::cerr << "[ERROR] 디코딩 실패 (빈 이미지)" << std::endl;
+		AddLogMsg(L"ERROR | 디코딩  실패 (빈 이미지)");
+		//std::cerr << "[ERROR] 디코딩 실패 (빈 이미지)" << std::endl;
 		return;
 	}
 
@@ -73,7 +76,8 @@ void StartVideoReceiver() {
 			client.connect()->wait();
 			client.subscribe(VIDEO_TOPIC, 1)->wait();
 
-			std::cout << "[MQTT] 영상 수신 시작" << std::endl;
+			AddLogMsg(L"MQTT | 영상 수신 시작");
+			//std::cout << "[MQTT] 영상 수신 시작" << std::endl;
 
 			// 스레드 유지
 			while (true) {
@@ -81,7 +85,11 @@ void StartVideoReceiver() {
 			}
 		}
 		catch (const mqtt::exception& err) {
-			std::cerr << "[MQTT ERROR] " << err.what() << std::endl;
+			std::string errorMsg = std::string("MQTT | ERROR | ") + err.what();
+			std::wstring wMsg = ConvertToWString(errorMsg);
+
+			AddLogMsg(wMsg.c_str());
+			//std::cerr << "[MQTT ERROR] " << err.what() << std::endl;
 		}
 	}).detach();
 }

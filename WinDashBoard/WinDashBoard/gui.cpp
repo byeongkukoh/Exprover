@@ -42,7 +42,7 @@ int InitGUI(HINSTANCE hInstance, int nCmdShow) {
 	// 영상 창 생성
 	hPictureBox = CreateWindow(
 		L"STATIC", nullptr,
-		WS_VISIBLE | WS_CHILD | SS_BITMAP,
+		WS_VISIBLE | WS_CHILD | SS_BITMAP | WS_BORDER,
 		25, 25, 500, 375,  // 좌표 및 크기 조절 가능
 		hwnd, nullptr, hInstance, nullptr
 	);
@@ -50,11 +50,18 @@ int InitGUI(HINSTANCE hInstance, int nCmdShow) {
 	// 버튼 생성
 	CreateButtonControls(hwnd, hInstance);
 
+	HWND hLogGroup = CreateWindow(
+		L"BUTTON", nullptr,
+		WS_VISIBLE | WS_CHILD | BS_GROUPBOX,
+		555, 20, 500, 500,
+		hwnd, nullptr, hInstance, nullptr
+	);
+
 	// 로그 창 생성
 	hListBox = CreateWindow(
 		L"LISTBOX", nullptr,
 		WS_VISIBLE | WS_CHILD | WS_VSCROLL | LBS_NOTIFY,
-		555, 25, 500, 520,
+		565, 55, 480, 460,
 		hwnd, (HMENU)3000, hInstance, nullptr
 	);
 
