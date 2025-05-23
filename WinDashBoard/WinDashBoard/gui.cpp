@@ -3,105 +3,150 @@
 
 #include "gui.h"
 #include "command.h"
+#include "Resource.h"
+#include "mqtt.h"
 #include "mqtt_video_receiver.h"
 
-
 HWND hListBox;
-HFONT hFont;	// 전역 폰트 핸들 선언
-
-HWND hPictureBox;					// 영상 출력용 PictureBox
-HBITMAP hCurrentBitmap = nullptr;	// 현재 표시 중인 비트맵
-
+HFONT hFont;
+HWND hPictureBox;
+HBITMAP hCurrentBitmap = nullptr;
 PROCESS_INFORMATION g_pyProcess = {};
 bool g_isRunning = false;
 
 int InitGUI(HINSTANCE hInstance, int nCmdShow) {
-	// 1. 윈도우 클래스 이름 정의 (식별용)
-	const wchar_t CLASS_NAME[] = L"DASHBOARD";
+    const wchar_t CLASS_NAME[] = L"DASHBOARD";
+    WNDCLASS wc = {};
+    wc.lpfnWndProc = WndProc;
+    wc.hInstance = hInstance;
+    wc.lpszClassName = CLASS_NAME;
+    wc.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
+    RegisterClass(&wc);
 
-	// 2. 윈도우 클래스 구조체 초기화
-	WNDCLASS wc = {};
-	wc.lpfnWndProc = WndProc;						// 메시지 처리 함수 등록
-	wc.hInstance = hInstance;						// 현재 실행 중인 인스턴스 핸들
-	wc.lpszClassName = CLASS_NAME;					// 클래스 이름 정의
-	wc.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);	// 배경색 설정 (흰색)
+    HWND hwnd = CreateWindowEx(
+        0, CLASS_NAME, L"MQTT DASHBOARD", WS_OVERLAPPEDWINDOW,
+        CW_USEDEFAULT, CW_USEDEFAULT, 1080, 620,
+        nullptr, nullptr, hInstance, nullptr
+    );
 
-	// 3. 클래스 등록
-	RegisterClass(&wc);
+    // 텍스트 입력창
+    HWND hCarNameEdit = CreateWindow(
+        L"EDIT", nullptr,
+        WS_VISIBLE | WS_CHILD | WS_BORDER | ES_AUTOHSCROLL,
+        25, 25, 200, 25,
+        hwnd, (HMENU)4001, hInstance, nullptr
+    );
 
-	// 4. 윈도우 생성
-	HWND hwnd = CreateWindowEx(
-		0,											// 확장 스타일 (없음)
-		CLASS_NAME,									// 앞에서 등록한 클래스 이름
-		L"MQTT DASHBOARD",							// 창 제목
-		WS_OVERLAPPEDWINDOW,						// 기본 윈도우 스타일
-		CW_USEDEFAULT, CW_USEDEFAULT, 1080, 570,		// 위치(x, y), 크기 (width, height)
-		nullptr, nullptr, hInstance, nullptr		// 부모, 메뉴 없음
-	);
+    // 연결 버튼
+    HWND hConnectBtn = CreateWindow(
+        L"BUTTON", L"연결",
+        WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
+        240, 25, 100, 25,
+        hwnd, (HMENU)4002, hInstance, nullptr
+    );
 
-	// 영상 창 생성
-	hPictureBox = CreateWindow(
-		L"STATIC", nullptr,
-		WS_VISIBLE | WS_CHILD | SS_BITMAP | WS_BORDER,
-		25, 25, 500, 375,  // 좌표 및 크기 조절 가능
-		hwnd, nullptr, hInstance, nullptr
-	);
+    // 영상 창
+    hPictureBox = CreateWindow(
+        L"STATIC", nullptr,
+        WS_VISIBLE | WS_CHILD | SS_BITMAP | WS_BORDER,
+        25, 75, 500, 375,
+        hwnd, nullptr, hInstance, nullptr
+    );
 
-	// 버튼 생성
-	CreateButtonControls(hwnd, hInstance);
+    CreateButtonControls(hwnd, hInstance);
 
-	HWND hLogGroup = CreateWindow(
-		L"BUTTON", nullptr,
-		WS_VISIBLE | WS_CHILD | BS_GROUPBOX,
-		555, 20, 500, 500,
-		hwnd, nullptr, hInstance, nullptr
-	);
+    HWND hLogGroup = CreateWindow(
+        L"BUTTON", nullptr,
+        WS_VISIBLE | WS_CHILD | BS_GROUPBOX,
+        555, 20, 500, 550,
+        hwnd, nullptr, hInstance, nullptr
+    );
 
-	// 로그 창 생성
-	hListBox = CreateWindow(
-		L"LISTBOX", nullptr,
-		WS_VISIBLE | WS_CHILD | WS_VSCROLL | LBS_NOTIFY,
-		565, 55, 480, 460,
-		hwnd, (HMENU)3000, hInstance, nullptr
-	);
+    // 로그 창
+    hListBox = CreateWindow(
+        L"LISTBOX", nullptr,
+        WS_VISIBLE | WS_CHILD | WS_VSCROLL | LBS_NOTIFY | LBS_NOSEL | WS_DISABLED,
+        565, 55, 480, 510,
+        hwnd, (HMENU)3000, hInstance, nullptr
+    );
 
-	StartVideoReceiver();
+    ShowWindow(hwnd, nCmdShow);
+    UpdateWindow(hwnd);
 
-	// 5. 창 표시
-	ShowWindow(hwnd, nCmdShow);
-	UpdateWindow(hwnd);
+    MSG msg = {};
+    while (GetMessage(&msg, nullptr, 0, 0)) {
+        // IsDialogMessage 제거 (테스트)
+        TranslateMessage(&msg);
+        DispatchMessage(&msg);
+    }
 
-	// 6. 메시지 루프
-	MSG msg = {};
-	while (GetMessage(&msg, nullptr, 0, 0)) {
-		TranslateMessage(&msg);		// 키보드 메시지 번역
-		DispatchMessage(&msg);		// WndProc에 메시지 전달
-	}
-
-	return 0;
+    return 0;
 }
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
-	switch (msg) {
-	case WM_KEYDOWN:
-		HandleKeyDown(hwnd, wParam);
-		break;
-	case WM_DESTROY:			//	창 닫기 버튼 눌림
-		if (g_isRunning) {
-			TerminateProcess(g_pyProcess.hProcess, 0);
-			CloseHandle(g_pyProcess.hProcess);
-			CloseHandle(g_pyProcess.hThread);
-		}
-
-		if (hCurrentBitmap) {
-			DeleteObject(hCurrentBitmap);
-			hCurrentBitmap = nullptr;
-		}
-
-		PostQuitMessage(0);		// 메시지 루프 종료 요청
-
-		return 0;
-	}
-
-	return DefWindowProc(hwnd, msg, wParam, lParam);	// 나머지는 기본 처리
+    switch (msg) {
+    case WM_COMMAND:
+        switch (LOWORD(wParam)) {
+        case 4002: { // 연결 버튼
+            wchar_t buffer[64];
+            GetWindowText(GetDlgItem(hwnd, 4001), buffer, 64);
+            std::wstring carName(buffer);
+            if (!carName.empty()) {
+                std::string nameStr(carName.begin(), carName.end());
+                std::string motorTopic = nameStr + "/motor";
+                std::string videoTopic = nameStr + "/video";
+                AddLogMsg((L"DEBUG | Setting motor topic: " + ConvertToWString(motorTopic)).c_str());
+                StartVideoReceiver(videoTopic);
+                SetMotorTopic(motorTopic);
+                SetFocus(hwnd);
+                AddLogMsg((L"INFO | " + carName + L"로 연결됨").c_str());
+            }
+            else {
+                MessageBox(hwnd, L"연결할 차 이름을 입력하세요", L"입력 오류", MB_ICONWARNING);
+            }
+            break;
+        }
+        case ID_UP:
+        case ID_DOWN:
+        case ID_LEFT:
+        case ID_RIGHT:
+        case ID_SPACE:
+        case ID_CTRL:
+            AddLogMsg((L"DEBUG | WM_COMMAND received for button ID: " + std::to_wstring(LOWORD(wParam))).c_str());
+            HandleButtonCommand(hwnd, wParam);
+            break;
+        }
+        break;
+    case WM_KEYDOWN:
+        // 텍스트 입력창에 포커스가 있으면 키 입력 무시
+        if (GetFocus() != GetDlgItem(hwnd, 4001)) {
+            SetFocus(hwnd);
+            AddLogMsg((L"DEBUG | WM_KEYDOWN received with wParam: " + std::to_wstring(wParam) + L", Focus: " + (GetFocus() == hwnd ? L"Main Window" : L"Other")).c_str());
+            HandleKeyDown(hwnd, wParam);
+        }
+        else {
+            AddLogMsg(L"DEBUG | WM_KEYDOWN ignored (Textbox has focus)");
+        }
+        break;
+    case WM_LBUTTONDOWN:
+        if (GetFocus() != GetDlgItem(hwnd, 4001)) {
+            SetFocus(hwnd);
+            AddLogMsg(L"DEBUG | WM_LBUTTONDOWN: Focus set to main window");
+        }
+        break;
+    case WM_DESTROY:
+        if (g_isRunning) {
+            TerminateProcess(g_pyProcess.hProcess, 0);
+            CloseHandle(g_pyProcess.hProcess);
+            CloseHandle(g_pyProcess.hThread);
+        }
+        if (hCurrentBitmap) {
+            DeleteObject(hCurrentBitmap);
+            hCurrentBitmap = nullptr;
+        }
+        CleanupMQTT();
+        PostQuitMessage(0);
+        return 0;
+    }
+    return DefWindowProc(hwnd, msg, wParam, lParam);
 }

@@ -18,7 +18,7 @@ namespace mqtt {
 
 const std::string SERVER_ADDRESS = "tcp://54.180.119.169";
 const std::string CLIENT_ID = "WinVideoReceiverClient";
-const std::string VIDEO_TOPIC = "rpi/video";
+//const std::string VIDEO_TOPIC = "rpi/video";
 
 // Callback 함수: 메시지 수신 시 호출
 void OnVideoMessage(const std::string& base64) {
@@ -57,8 +57,8 @@ void OnVideoMessage(const std::string& base64) {
 	// TODO: WinAPI로 화면에 출력
 }
 
-void StartVideoReceiver() {
-	std::thread([] {
+void StartVideoReceiver(const std::string& topic) {
+	std::thread([topic] {
 		mqtt::async_client client(SERVER_ADDRESS, CLIENT_ID);
 
 		// 메시지 수신 시 동작할 콜백 등록
@@ -74,7 +74,7 @@ void StartVideoReceiver() {
 
 		try {
 			client.connect()->wait();
-			client.subscribe(VIDEO_TOPIC, 1)->wait();
+			client.subscribe(topic, 1)->wait();
 
 			AddLogMsg(L"MQTT | 영상 수신 시작");
 			//std::cout << "[MQTT] 영상 수신 시작" << std::endl;

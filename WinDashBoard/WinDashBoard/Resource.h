@@ -37,4 +37,5 @@
 #define ID_LEFT     1003
 #define ID_RIGHT    1004
 #define ID_SPACE    1005
+#define ID_CTRL		1006
 #endif
