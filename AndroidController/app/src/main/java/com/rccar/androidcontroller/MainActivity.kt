@@ -8,8 +8,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.Button
 import androidx.compose.material.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.material.TextField
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -17,7 +17,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.runtime.remember
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 
@@ -29,21 +28,29 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             val logs = remember { mutableStateListOf<String>() }
+            var carName by remember { mutableStateOf("") } // 차 이름 상태
+            var isConnected by remember { mutableStateOf(false) } // 연결 상태
 
-            // 콜백으로 로그 전달
-            mqttManager = MqttManager { msg ->
-                logs.add(msg)
-            }
-            mqttManager.connect()
+            // MQTT 매니저 초기화
+            mqttManager = MqttManager(
+                onLog = { msg -> logs.add(msg) },
+                onConnectionStatusChanged = { connected -> isConnected = connected }
+            )
 
-            MainScreen(mqttManager, logs)
+            MainScreen(
+                mqttManager = mqttManager,
+                logs = logs,
+                carName = carName,
+                onCarNameChange = { carName = it },
+                isConnected = isConnected
+            )
         }
     }
 
     override fun onDestroy() {
         super.onDestroy()
         try {
-            mqttManager.disconnect() // 연결 해제
+            mqttManager.disconnect()
             Log.d("MainActivity", "MQTT 연결 해제")
         } catch (e: Exception) {
             Log.e("MainActivity", "MQTT 연결 해제 실패: ${e.message}", e)
@@ -51,9 +58,14 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-// 메인 화면 구성
 @Composable
-fun MainScreen(mqttManager: MqttManager, logs: List<String>) {
+fun MainScreen(
+    mqttManager: MqttManager,
+    logs: List<String>,
+    carName: String,
+    onCarNameChange: (String) -> Unit,
+    isConnected: Boolean
+) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -61,6 +73,40 @@ fun MainScreen(mqttManager: MqttManager, logs: List<String>) {
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        // 차 이름 입력란과 연결 버튼
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            TextField(
+                value = carName,
+                onValueChange = onCarNameChange,
+                label = { Text("차 이름") },
+                modifier = Modifier.weight(1f)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Button(
+                onClick = {
+                    if (carName.isNotBlank()) {
+                        mqttManager.connect(carName)
+                    } else {
+                        mqttManager.logMessage("[${currentTimeString()}] 차 이름을 입력하세요")
+                    }
+                },
+                modifier = Modifier.width(100.dp)
+            ) {
+                Text(if (isConnected) "연결 해제" else "연결")
+            }
+        }
+        // 연결 상태 표시
+        Text(
+            text = if (isConnected) "연결됨" else "연결 안됨",
+            color = if (isConnected) Color.Green else Color.Red,
+            modifier = Modifier.padding(8.dp)
+        )
         Spacer(modifier = Modifier.height(20.dp))
         Box(
             modifier = Modifier
@@ -74,13 +120,12 @@ fun MainScreen(mqttManager: MqttManager, logs: List<String>) {
         Spacer(modifier = Modifier.height(32.dp))
         LogBox(logs)
         Spacer(modifier = Modifier.height(32.dp))
-        ControlPanel(mqttManager)
+        ControlPanel(mqttManager, isConnected)
     }
 }
 
-// 컨트롤 패널 구성
 @Composable
-fun ControlPanel(mqttManager: MqttManager) {
+fun ControlPanel(mqttManager: MqttManager, isConnected: Boolean) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -93,7 +138,7 @@ fun ControlPanel(mqttManager: MqttManager) {
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            DirectionGrid(mqttManager = mqttManager)
+            DirectionGrid(mqttManager = mqttManager, enabled = isConnected)
         }
         Column(
             modifier = Modifier.width(IntrinsicSize.Min),
@@ -105,16 +150,18 @@ fun ControlPanel(mqttManager: MqttManager) {
                 modifier = Modifier
                     .width(128.dp)
                     .height(64.dp)
-                    .padding(4.dp)
+                    .padding(4.dp),
+                enabled = isConnected
             ) {
                 Text("Accelation")
             }
             Button(
-                onClick = { mqttManager.publish("stop") }, // Brake 버튼에 stop 명령 추가
+                onClick = { mqttManager.publish("stop") },
                 modifier = Modifier
                     .width(128.dp)
                     .height(64.dp)
-                    .padding(4.dp)
+                    .padding(4.dp),
+                enabled = isConnected
             ) {
                 Text("Brake")
             }
@@ -122,9 +169,8 @@ fun ControlPanel(mqttManager: MqttManager) {
     }
 }
 
-// 방향키 그리드 구성
 @Composable
-fun DirectionGrid(modifier: Modifier = Modifier, mqttManager: MqttManager) {
+fun DirectionGrid(modifier: Modifier = Modifier, mqttManager: MqttManager, enabled: Boolean) {
     Column(
         modifier = modifier.padding(8.dp),
         verticalArrangement = Arrangement.Center,
@@ -132,20 +178,19 @@ fun DirectionGrid(modifier: Modifier = Modifier, mqttManager: MqttManager) {
     ) {
         Row(horizontalArrangement = Arrangement.Center) {
             Spacer(modifier = Modifier.size(64.dp))
-            DirectionButton("UP", mqttManager)
+            DirectionButton("UP", mqttManager, enabled)
             Spacer(modifier = Modifier.size(64.dp))
         }
         Row(horizontalArrangement = Arrangement.Center) {
-            DirectionButton("LF", mqttManager)
-            DirectionButton("DW", mqttManager)
-            DirectionButton("RG", mqttManager)
+            DirectionButton("LF", mqttManager, enabled)
+            DirectionButton("DW", mqttManager, enabled)
+            DirectionButton("RG", mqttManager, enabled)
         }
     }
 }
 
-// 방향키 버튼 함수
 @Composable
-fun DirectionButton(label: String, mqttManager: MqttManager) {
+fun DirectionButton(label: String, mqttManager: MqttManager, enabled: Boolean) {
     Button(
         onClick = {
             val command = when (label) {
@@ -160,7 +205,8 @@ fun DirectionButton(label: String, mqttManager: MqttManager) {
         },
         modifier = Modifier
             .size(64.dp)
-            .padding(4.dp)
+            .padding(4.dp),
+        enabled = enabled
     ) {
         Text(
             label,
