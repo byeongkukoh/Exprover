@@ -1,0 +1,19 @@
+# C++/C/Python/Arduino 소스 파일 강제 인식
+*.cpp linguist-language=C++
+*.h linguist-language=C++
+*.c linguist-language=C
+*.ino linguist-language=Arduino
+*.py linguist-language=Python
+*.kt linguist-language=Kotlin
+*.kts linguist-language=Kotlin
+
+# 라이브러리, 데이터, 문서, 빌드 산출물 등은 통계 제외
+lib/** linguist-vendored
+build/** linguist-vendored
+data/** linguist-vendored
+docs/** linguist-documentation
+*.md linguist-documentation
+*.csv linguist-detectable=false
+*.json linguist-detectable=false
+*.jpg linguist-detectable=false
+*.png linguist-detectable=false
