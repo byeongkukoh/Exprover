@@ -1,14 +1,18 @@
-#include <WiFi.h>
-#include <PubSubClient.h>
-#include <DHT.h>
+#include <Adafruit_BMP280.h>
+#include <Adafruit_Sensor.h>
 #include <ESP32Servo.h>
+#include <DHT.h>
+#include <PubSubClient.h>
+#include <Wire.h>
+#include <WiFi.h>
+
 
 // ── Wi-Fi & MQTT 설정 ───────────────────────────────────
-const char* ssid       = "bk-wifi";
-const char* password   = "byeongkukoh1007";
+const char* ssid       = "U+NetE4DC";
+const char* password   = "9444F3B@7G";
 const char* mqttServer = "54.180.119.169";
 const uint16_t mqttPort= 1883;
-const char*  mqttTopic = "exp/date";
+const char*  mqttTopic = "exp/data";
 
 WiFiClient     wifiClient;
 PubSubClient   mqtt(wifiClient);
@@ -30,9 +34,12 @@ DHT dht(DHTPIN, DHTTYPE);
 
 const int servoPin = 18;
 
+#define BMP280_I2C_ADDRESS 0x76  
+Adafruit_BMP280 bmp;
+
 // ── 전송 간격 ───────────────────────────────────────────
 unsigned long lastPublish = 0;
-const unsigned long interval = 10;  // 2초마다 측정·전송
+const unsigned long interval = 1000;  // 2초마다 측정·전송
 
 // ── Wi-Fi 연결 ─────────────────────────────────────────
 void connectWiFi() {
@@ -48,9 +55,11 @@ void connectWiFi() {
 // ── MQTT 연결 ───────────────────────────────────────────
 void connectMQTT() {
   mqtt.setServer(mqttServer, mqttPort);
+  mqtt.setCallback(callback);
   while (!mqtt.connected()) {
     Serial.print("MQTT connecting…");
     if (mqtt.connect("ESP32_AllInOne")) {
+      mqtt.subscribe("exp/motor");
       Serial.println(" connected!");
     } else {
       Serial.printf(" failed, rc=%d, retry in 2s\n", mqtt.state());
@@ -72,15 +81,15 @@ void callback(char* topic, byte* payload, unsigned int length) {
   }
 }
 
-void reconnect() {
-  while (!mqtt.connected()) {
-    if (mqtt.connect("ESP32Client")) {
-      mqtt.subscribe("exp/motor");
-    } else {
-      delay(2000);
-    }
-  }
-}
+// void reconnect() {
+//   while (!mqtt.connected()) {
+//     if (mqtt.connect("ESP32Client")) {
+//       mqtt.subscribe("exp/motor");
+//     } else {
+//       delay(2000);
+//     }
+//   }
+// }
 
 
 void setup() {
@@ -92,6 +101,20 @@ void setup() {
 
   // MQ-2, Soil AO는 입력 모드 선언 불필요(analogRead)
   // Soil DO 미사용
+
+  // BMP280, IC3 통신 세팅
+  Wire.begin(21, 22, 100000);  
+
+  if (!bmp.begin(BMP280_I2C_ADDRESS)) {
+    Serial.println("ERROR: BMP280 not found. Check wiring & address.");
+    while (1) delay(10);
+  }
+
+  bmp.setSampling(Adafruit_BMP280::MODE_NORMAL,
+                Adafruit_BMP280::SAMPLING_X2,
+                Adafruit_BMP280::SAMPLING_X16,
+                Adafruit_BMP280::FILTER_X16,
+                Adafruit_BMP280::STANDBY_MS_500);
 
   // 서보모터 세팅
   armServo.setPeriodHertz(50);
@@ -113,17 +136,24 @@ void loop() {
   if (millis() - lastPublish < interval) return;
   lastPublish = millis();
 
-  // ── 온·습도 측정 ─────────────────────────────────────
+  // ── 온·습도, 기압 측정 ─────────────────────────────────────
   float temperature = dht.readTemperature();
   float humidity    = dht.readHumidity();
+  float pres = bmp.readPressure() / 100.0F;
+
   if (isnan(temperature) || isnan(humidity)) {
     Serial.println("❌ DHT read failed");
     return;
   }
 
+  if (isnan(pres)) {
+    Serial.println("❌ BMP read failed");
+    return;
+  }
+
   // ── 가스 센서(MQ-2) 측정 ─────────────────────────────
   int   gasRaw     = analogRead(MQ2PIN);  
-  float gasVoltage = gasRaw * (3.3f / 4095.0f);
+  float gasVoltage = gasRaw; // * (3.3f / 4095.0f);
 
   // ── 토양 습도 측정 ───────────────────────────────────
   int rawSoil      = analogRead(SOIL_AO_PIN);
@@ -134,7 +164,7 @@ void loop() {
   char payload[256];
   int len = snprintf(payload, sizeof(payload),
     "%.1f/%.1f/%.2f/%.2f/%d",
-    temperature, humidity, gasVoltage, 0.0, soilPct   // 4번째 값(기압)은 임시로 0.0 사용
+    temperature, humidity, gasVoltage, pres, soilPct   // 4번째 값(기압)은 임시로 0.0 사용
   );
 
   // ── MQTT 퍼블리시 ───────────────────────────────────
