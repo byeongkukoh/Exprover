@@ -1,10 +1,14 @@
 <script setup>
 import ChatBot from "./components/ChatBot.vue"
+import RainPredictor from "./components/RainPredictor.vue"
 </script>
 
 <template>
   <div>
     <ChatBot />
+  </div>
+  <div>
+    <RainPredictor />
   </div>
 </template>
 

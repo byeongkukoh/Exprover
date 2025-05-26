@@ -11,7 +11,7 @@ def run_rain_prediction_server():
 
     if (not firebase_admin._apps):
         # 1. Firestore 초기화
-        cred = credentials.Certificate("/home/pi/rain/rc-car-pjt-firebase-key.json")
+        cred = credentials.Certificate("/home/pi/project/prediction_model/rc-car-pjt-firebase-key.json")
         firebase_admin.initialize_app(cred)
     db = firestore.client()
 
@@ -44,7 +44,7 @@ def run_rain_prediction_server():
         x_in = scaled.reshape(1, 30, 3).astype(np.float32)  # (1, 30, 3) 모델 입력 형태
 
         # 5. TFLite 모델 추론
-        interpreter = tflite.Interpreter(model_path='/home/pi/rain2/rain_predict.tflite')
+        interpreter = tflite.Interpreter(model_path='/home/pi/project/prediction_model/rain_predict.tflite')
         interpreter.allocate_tensors()
         input_details = interpreter.get_input_details()[0]
         output_details = interpreter.get_output_details()[0]
