@@ -53,8 +53,6 @@ async function getPrediction() {
     border-radius: 18px;
     box-shadow: 0 6px 24px rgba(42, 86, 155, 0.09);
     width: 450px;
-    /* max-width: 360px;
-    min-width: 260px; */
     text-align: center;
 }
 
