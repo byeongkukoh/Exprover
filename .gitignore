@@ -1,5 +1,7 @@
 # files
 *.pem
+*-key.json
+*.env
 
 # directory
 .git/
