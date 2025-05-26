@@ -1,5 +1,7 @@
 import os
 import time
+from flask import Flask, request, jsonify
+from flask_cors import CORS
 from openai import OpenAI, OpenAIError, RateLimitError
 
 # API 키 로드
@@ -21,9 +23,7 @@ def load_env_to_dict(path='.env'):
     return env_dict
 
 env = load_env_to_dict(os.path.join(os.path.dirname(__file__), ".env"))
-
 openai_api_key = env.get("OPENAI_API_KEY")
-
 client = OpenAI(api_key=openai_api_key)
 
 def ask_chatbot(prompt: str, retry_count=3, backoff_factor=2) -> str:
@@ -52,24 +52,20 @@ def ask_chatbot(prompt: str, retry_count=3, backoff_factor=2) -> str:
             print(f"API 호출 중 오류 발생: {e}")
             return ""
 
+app = Flask(__name__)
+CORS(app)   # 모든 오리진에서 접근 가능하게 (개발용)
+
+@app.route('/chat', methods=['POST'])
+def chat():
+    data = request.get_json()
+    prompt = data.get('message', '')
+    if not prompt.strip():
+        return jsonify({'answer': "질문을 입력해 주세요!"}), 400
+    
+    answer = ask_chatbot(prompt)
+    return jsonify({'answer': answer})
+
+
 if __name__ == "__main__":
-    print("exprover와 대화를 시작합니다! 'exit' 또는 'quit'를 입력하면 종료됩니다.")
-    while True:
-        # 사용자 입력 받기
-        user_input = input("당신: ")
-        
-        # 종료 조건
-        if user_input.lower() in ['exit', 'quit']:
-            print("exprover: 대화를 종료합니다. 안녕하세요!")
-            break
-
-        # 빈 입력 방지
-        if not user_input.strip():
-            print("exprover: 질문을 입력해 주세요!")
-            continue
-
-        # 챗봇에 질문
-        answer = ask_chatbot(user_input)
-        if answer:
-            print("exprover:", answer)
-
+    # host = 0.0.0.0 -> EC2 외부 접근
+    app.run(host='0.0.0.0', port=5000)

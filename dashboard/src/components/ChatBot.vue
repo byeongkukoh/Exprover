@@ -24,7 +24,7 @@ import axios from "axios";
 const messages = ref([]);
 const userInput = ref("");
 
-const API_URL = "http://서버IP:5000/chat";      // EC2 IP로 변경
+const API_URL = "http://54.180.119.169:5000/chat";      // EC2 IP로 변경
 
 async function sendMessage() {
     const content = userInput.value.trim();
@@ -35,7 +35,7 @@ async function sendMessage() {
     userInput.value = "";
 
     try {
-        const res = await async.post(API_URL, { message: content });
+        const res = await axios.post(API_URL, { message: content });
         const answer = res.data.answer || "(응답 없음)";
         messages.value.push({ role: "bot", content: answer });
     } catch (err) {
@@ -49,7 +49,7 @@ async function sendMessage() {
 
 <style scoped>
 .chatbot-container {
-    min-width: 500px;
+    width: 500px;
     margin: 50px auto;
     border: 1px solid #f8f9fa;
     border-radius: 12px;
@@ -68,6 +68,7 @@ async function sendMessage() {
 .user-msg,
 .bot-msg {
     display: flex;
+    text-align: left;
     margin: 5px 0;
 }
 
