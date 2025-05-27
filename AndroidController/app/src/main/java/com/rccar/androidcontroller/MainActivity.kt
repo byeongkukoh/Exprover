@@ -19,32 +19,53 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import android.graphics.Bitmap
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.foundation.Image
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.draw.rotate
 
 class MainActivity : ComponentActivity() {
     private lateinit var mqttManager: MqttManager
+    private var carName: String = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        carName = savedInstanceState?.getString("carName") ?: ""
+
         setContent {
             val logs = remember { mutableStateListOf<String>() }
-            var carName by remember { mutableStateOf("") } // 차 이름 상태
-            var isConnected by remember { mutableStateOf(false) } // 연결 상태
+            var carNameState by remember { mutableStateOf(carName) }
+            var isConnected by remember { mutableStateOf(false) }
+            var videoFrame by remember { mutableStateOf<Bitmap?>(null) }
 
-            // MQTT 매니저 초기화
-            mqttManager = MqttManager(
-                onLog = { msg -> logs.add(msg) },
-                onConnectionStatusChanged = { connected -> isConnected = connected }
-            )
+            if (!::mqttManager.isInitialized) {
+                mqttManager = MqttManager(
+                    onLog = { msg -> logs.add(msg) },
+                    onConnectionStatusChanged = { connected -> isConnected = connected },
+                    onVideoFrameReceived = { bitmap -> videoFrame = bitmap }
+                )
+            }
+
+            LaunchedEffect(carNameState) {
+                carName = carNameState
+            }
 
             MainScreen(
                 mqttManager = mqttManager,
                 logs = logs,
-                carName = carName,
-                onCarNameChange = { carName = it },
-                isConnected = isConnected
+                carName = carNameState,
+                onCarNameChange = { carNameState = it },
+                isConnected = isConnected,
+                videoFrame = videoFrame
             )
         }
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putString("carName", carName)
     }
 
     override fun onDestroy() {
@@ -64,7 +85,8 @@ fun MainScreen(
     logs: List<String>,
     carName: String,
     onCarNameChange: (String) -> Unit,
-    isConnected: Boolean
+    isConnected: Boolean,
+    videoFrame: Bitmap?
 ) {
     Column(
         modifier = Modifier
@@ -73,7 +95,6 @@ fun MainScreen(
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // 차 이름 입력란과 연결 버튼
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -91,7 +112,11 @@ fun MainScreen(
             Button(
                 onClick = {
                     if (carName.isNotBlank()) {
-                        mqttManager.connect(carName)
+                        if (isConnected) {
+                            mqttManager.disconnect()
+                        } else {
+                            mqttManager.connect(carName)
+                        }
                     } else {
                         mqttManager.logMessage("[${currentTimeString()}] 차 이름을 입력하세요")
                     }
@@ -101,7 +126,6 @@ fun MainScreen(
                 Text(if (isConnected) "연결 해제" else "연결")
             }
         }
-        // 연결 상태 표시
         Text(
             text = if (isConnected) "연결됨" else "연결 안됨",
             color = if (isConnected) Color.Green else Color.Red,
@@ -115,7 +139,18 @@ fun MainScreen(
                 .background(Color.Black),
             contentAlignment = Alignment.Center
         ) {
-            Text("영상 출력 영역", color = Color.White)
+            if (videoFrame != null) {
+                Image(
+                    bitmap = videoFrame.asImageBitmap(),
+                    contentDescription = "비디오 프레임",
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .rotate(180f), // 180도 회전
+                    contentScale = ContentScale.Fit
+                )
+            } else {
+                Text("영상 출력 영역", color = Color.White)
+            }
         }
         Spacer(modifier = Modifier.height(32.dp))
         LogBox(logs)
@@ -146,14 +181,24 @@ fun ControlPanel(mqttManager: MqttManager, isConnected: Boolean) {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Button(
-                onClick = { Log.d("ControlPanel", "Accelation 버튼 눌림") },
+                onClick = { mqttManager.publish("soil") },
                 modifier = Modifier
                     .width(128.dp)
                     .height(64.dp)
                     .padding(4.dp),
                 enabled = isConnected
             ) {
-                Text("Accelation")
+                Text("Soil")
+            }
+            Button(
+                onClick = { mqttManager.publish("hi") },
+                modifier = Modifier
+                    .width(128.dp)
+                    .height(64.dp)
+                    .padding(4.dp),
+                enabled = isConnected
+            ) {
+                Text("Greeting")
             }
             Button(
                 onClick = { mqttManager.publish("stop") },
