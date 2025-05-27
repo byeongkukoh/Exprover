@@ -112,6 +112,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case ID_RIGHT:
         case ID_SPACE:
         case ID_CTRL:
+        case ID_ALT:
             AddLogMsg((L"DEBUG | WM_COMMAND received for button ID: " + std::to_wstring(LOWORD(wParam))).c_str());
             HandleButtonCommand(hwnd, wParam);
             break;

@@ -59,6 +59,12 @@ void CreateButtonControls(HWND hwnd, HINSTANCE hInstance) {
         415, 520, 110, 50,
         hwnd, (HMENU)ID_CTRL, hInstance, nullptr
     );
+    CreateWindow(
+        L"BUTTON", L"Alt",
+        WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
+        415, 460, 110, 50,
+        hwnd, (HMENU)ID_ALT, hInstance, nullptr
+    );
 }
 
 void HandleButtonCommand(HWND hwnd, WPARAM wParam) {
@@ -88,6 +94,10 @@ void HandleButtonCommand(HWND hwnd, WPARAM wParam) {
     case ID_CTRL:
         AddLogMsg(L"INFO | CTRL 버튼이 눌렸습니다.");
         AsyncPublish("hi");
+        break;
+    case ID_ALT:
+        AddLogMsg(L"INFO | ALT 버튼이 눌렸습니다.");
+        AsyncPublish("soil");
         break;
     }
 }
@@ -119,6 +129,10 @@ void HandleKeyDown(HWND hwnd, WPARAM wParam) {
     case VK_CONTROL:
         AddLogMsg(L"DEBUG | Calling HandleButtonCommand for VK_CONTROL (0x20)");
         HandleButtonCommand(hwnd, ID_CTRL);
+        break;
+    case VK_MENU:
+        AddLogMsg(L"DEBUG | Calling HandleButtonCommand for VK_CONTROL (0x20)");
+        HandleButtonCommand(hwnd, ID_ALT);
         break;
     default:
         AddLogMsg((L"DEBUG | Unknown key code: " + std::to_wstring(wParam)).c_str());
