@@ -7,12 +7,12 @@ import { getFirestore } from "firebase/firestore";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey: process.env.VUE_APP_FIREBASE_API_KEY,  // 환경변수에서 값을 가져옴
-  authDomain: process.env.VUE_APP_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.VUE_APP_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.VUE_APP_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.VUE_APP_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.VUE_APP_FIREBASE_APP_ID
+  apiKey: "AIzaSyDhzIWfldJ9ejT23GpvS66LyTbCsgq-s2A",
+  authDomain: "rc-car-pjt-39ec0.firebaseapp.com",
+  projectId: "rc-car-pjt-39ec0",
+  storageBucket: "rc-car-pjt-39ec0.firebasestorage.app",
+  messagingSenderId: "393060247",
+  appId: "1:393060247:web:0a0bb0914b0988a892aed2"
 };
 
 const app = initializeApp(firebaseConfig);

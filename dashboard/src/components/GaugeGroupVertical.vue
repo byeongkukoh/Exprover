@@ -1,7 +1,7 @@
 <template>
     <div class="row">
       <div class="gauge-block">
-        <VerticalBarGauge v-if="temperature !== null" :value="temperature" :max="50" :min="-50" unit="°C" type="temperature" />
+        <VerticalBarGauge v-if="temperature !== null" :value="temperature" :max="50" :min="-30" unit="°C" type="temperature" />
         <span class="label">온도</span>
       </div>
       <div class="gauge-block">
