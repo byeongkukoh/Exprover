@@ -8,11 +8,11 @@
 
 
 // ── Wi-Fi & MQTT 설정 ───────────────────────────────────
-const char* ssid       = "U+NetE4DC";
-const char* password   = "9444F3B@7G";
+const char* ssid       = "LJH";
+const char* password   = "00000000";
 const char* mqttServer = "54.180.119.169";
 const uint16_t mqttPort= 1883;
-const char*  mqttTopic = "exp/data";
+const char*  mqttTopic = "rover/data";
 
 WiFiClient     wifiClient;
 PubSubClient   mqtt(wifiClient);
@@ -32,14 +32,12 @@ DHT dht(DHTPIN, DHTTYPE);
 #define SOIL_DRY_VALUE 3000  // 흙이 건조할 때 raw 값
 #define SOIL_WET_VALUE 1000  // 흙이 물에 잠겼을 때 raw 값
 
-const int servoPin = 18;
-
 #define BMP280_I2C_ADDRESS 0x76  
 Adafruit_BMP280 bmp;
 
 // ── 전송 간격 ───────────────────────────────────────────
 unsigned long lastPublish = 0;
-const unsigned long interval = 1000;  // 2초마다 측정·전송
+const unsigned long interval = 5 * 1000;  // 2초마다 측정·전송
 
 // ── Wi-Fi 연결 ─────────────────────────────────────────
 void connectWiFi() {
@@ -55,11 +53,9 @@ void connectWiFi() {
 // ── MQTT 연결 ───────────────────────────────────────────
 void connectMQTT() {
   mqtt.setServer(mqttServer, mqttPort);
-  mqtt.setCallback(callback);
   while (!mqtt.connected()) {
     Serial.print("MQTT connecting…");
     if (mqtt.connect("ESP32_AllInOne")) {
-      mqtt.subscribe("exp/motor");
       Serial.println(" connected!");
     } else {
       Serial.printf(" failed, rc=%d, retry in 2s\n", mqtt.state());
@@ -67,30 +63,6 @@ void connectMQTT() {
     }
   }
 }
-
-// -- 모터 조작 Callback 함수
-void callback(char* topic, byte* payload, unsigned int length) {
-  String msg;
-  for (int i = 0; i < length; i++) {
-    msg += (char)payload[i];
-  }
-  msg.trim();
-
-  if (msg == "hi") {
-    greetMotion();
-  }
-}
-
-// void reconnect() {
-//   while (!mqtt.connected()) {
-//     if (mqtt.connect("ESP32Client")) {
-//       mqtt.subscribe("exp/motor");
-//     } else {
-//       delay(2000);
-//     }
-//   }
-// }
-
 
 void setup() {
   Serial.begin(115200);
@@ -115,11 +87,6 @@ void setup() {
                 Adafruit_BMP280::SAMPLING_X16,
                 Adafruit_BMP280::FILTER_X16,
                 Adafruit_BMP280::STANDBY_MS_500);
-
-  // 서보모터 세팅
-  armServo.setPeriodHertz(50);
-  armServo.attach(servoPin, 500, 2400);
-  armServo.write(0);
 
   connectWiFi();
   connectMQTT();
@@ -174,13 +141,4 @@ void loop() {
   } else {
     Serial.println("❌ Publish failed");
   }
-}
-
-void greetMotion() {
-  armServo.write(90); delay(500);
-  for (int i = 0; i < 3; i++) {
-    armServo.write(110); delay(300);
-    armServo.write(70); delay(300);
-  }
-  armServo.write(0); delay(500);
 }
