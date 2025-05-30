@@ -13,6 +13,7 @@
 ### 라이브러리 설치
 
 1. `paho-mqtt` 설치
-```bash
-pip install paho-mqtt --break-system-packages
-```
+
+   ```bash
+   pip install paho-mqtt --break-system-packages
+   ```

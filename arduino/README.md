@@ -1,5 +1,16 @@
 # 🔥 Arduino Module
 
-## DHT11 Sensor
+- ESP32를 통한 무선 통신
+- Servo Motor와 각종 센서 사용
 
-## MQ-2 Sensor
+## 🛠️ Sensor
+
+### Sensor Circuit Diagram
+
+![Sensor Circuit](./Sensor_Circuit_Diagram.png)
+
+## 🛠️ Servo Motor
+
+### Servo Motor Circuit Diagram
+
+![Servo Moter Circuit](./Servo_Motor_Circuit_Diagram.png)

@@ -1,9 +1,12 @@
 import firebase_admin
 from firebase_admin import credentials, firestore
 import numpy as np
-import tflite_runtime.interpreter as tflite
+#import tflite_runtime.interpreter as tflite
+import tensorflow as tf
 from flask import Flask, jsonify
 from flask_cors import CORS
+
+tflite = tf.lite
 
 def run_rain_prediction_server():
     app = Flask(__name__)
@@ -11,7 +14,7 @@ def run_rain_prediction_server():
 
     if (not firebase_admin._apps):
         # 1. Firestore 초기화
-        cred = credentials.Certificate("/home/pi/project/prediction_model/rc-car-pjt-firebase-key.json")
+        cred = credentials.Certificate("/home/ubuntu/rain/rc-car-pjt-firebase-key.json")
         firebase_admin.initialize_app(cred)
     db = firestore.client()
 
@@ -44,7 +47,7 @@ def run_rain_prediction_server():
         x_in = scaled.reshape(1, 30, 3).astype(np.float32)  # (1, 30, 3) 모델 입력 형태
 
         # 5. TFLite 모델 추론
-        interpreter = tflite.Interpreter(model_path='/home/pi/project/prediction_model/rain_predict.tflite')
+        interpreter = tflite.Interpreter(model_path='/home/ubuntu/rain/rain_predict.tflite')
         interpreter.allocate_tensors()
         input_details = interpreter.get_input_details()[0]
         output_details = interpreter.get_output_details()[0]
@@ -67,7 +70,7 @@ def run_rain_prediction_server():
         result = run_rain_prediction()
         return jsonify(result)
     
-    app.run(host="0.0.0.0", port=5000)
+    app.run(host="0.0.0.0", port=4000)
 
 if __name__ == "__main__":
     run_rain_prediction_server()
