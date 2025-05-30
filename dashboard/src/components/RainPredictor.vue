@@ -28,7 +28,7 @@ const result = ref(null)
 const loading = ref(false)
 const error = ref('')
 
-const BACKEND_URL = 'http://192.168.150.7:5000/predict' // 라즈베리파이 IP로 변경!
+const BACKEND_URL = 'api/predict' // 라즈베리파이 IP로 변경!
 
 async function getPrediction() {
     result.value = null

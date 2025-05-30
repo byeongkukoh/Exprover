@@ -1,0 +1,12 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/chat",
+      "destination": "http://54.180.119.169:5000/chat"
+    },
+    {
+      "source": "/api/predict",
+      "destination": "http://54.180.119.169:4000/predict"
+    }
+  ]
+}
